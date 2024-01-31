@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  flask-app:
+    build:
+      context: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./:/app
+    extra_hosts:
+      - "host.docker.internal:172.17.0.1" #172.17.0.1 é o gateway do docker
+    command: ["flask", "run", "--host=0.0.0.0", "--port=3000"]
+
