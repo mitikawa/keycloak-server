@@ -32,8 +32,12 @@ const middlewareIsAuth = (
 
 app.get('/login', (req, res) => {
     const nonce = crypto.randomBytes(16).toString("base64");
+    const state = crypto.randomBytes(16).toString("base64");
+
     //@ts-expect-error - type mismatch
     req.session.nonce = nonce;
+    //@ts-expect-error - type mismatch
+    req.session.nonce = state;
     req.session.save();
 
     const loginParams = new URLSearchParams({
@@ -41,7 +45,8 @@ app.get('/login', (req, res) => {
         redirect_uri: 'http://localhost:3000/callback/',
         response_type: 'code',
         scope: 'openid',
-        nonce
+        nonce,
+        state
     });
 
     const url = `http://localhost:8080/realms/fullcycle-realm/protocol/openid-connect/auth?${loginParams.toString()}`;
@@ -55,6 +60,14 @@ app.get('/callback', async (req, res) => {
     if (req.session.user) {
         return res.redirect("/admin")
     }
+
+    //@ts-expect-error - type mismatch
+    if (req.query.state !== req.session.state) {
+        // State error may happen in good faith (e.g. expired)
+        // Instead of error it'd be possible to redirect to login to try again
+        return res.status(401).json({ message: "Unauthenticated" });
+    }
+
     console.log(req.query);
 
     const bodyParams = new URLSearchParams({
