@@ -4,6 +4,7 @@ services:
 
   app:
     build: .
+    container_name: node-authentications
     ports:
       - 3000:3000
     volumes:
